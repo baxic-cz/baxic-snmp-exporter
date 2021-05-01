@@ -1,0 +1,13 @@
+[Unit]
+Description=Baxic SNMP Exporter Service
+After=network.target iptables.service firewalld.service ip6tables.service ipset.service
+
+[Service]
+Type=simple
+ExecStart=/opt/prometheus-apps/baxic-snmp-exporter/baxic-snmp-exporter.sh
+User=nobody
+Group=nogroup
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

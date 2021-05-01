@@ -1,0 +1,83 @@
+
+---- Introduction
+
+Baxic SNMP Exporter is a Prometheus Exporter used to collect metrics
+from a monitored host using any SNMP OIDs configured in the configuration
+file. It's written in Bash and uses the ncat command to listen on TCP port
+9089 and snmpwalk command to retrieve metrics from the target host.
+
+See online Wiki for more information:
+
+https://baxic.org/index.php/wikipedia/article/linux/monitoring/prometheus/exporters/baxic-snmp-exporter
+
+
+---- Prerequisities
+
+The ncat tool must be present on the system. Moreover, /bih/sh must be
+a symlink to /bin/bash otherwise the function export doesn't work properly
+(note the export -f ... commands in the script).
+
+Furthermore, we need the snmpwalk command.
+
+
+---- Installation
+
+# switch to root user
+mkdir -p /opt/prometheus-apps
+cd /opt/prometheus-apps
+
+# either clone a git repository
+git clone git://github.com/baxic-cz/baxic-snmp-exporter.git
+# or extract the tgz archive
+tar -xzf baxic-snmp-exporter*.tgz
+ln -s baxic-snmp-exporter.*.linux-noarch baxic-snmp-exporter
+
+cd baxic-snmp-exporter
+
+# check file permissions
+chmod a+x *.sh
+ls -l
+
+# configure metrics in baxic-snmp-exporter.conf, an example configuration follows,
+# each entry in the SNMP array consists of three fields separated by a colon,
+# the module name, the metric name the SNMP oid
+
+SNMP[0]='baxic_server:memory_total:1.3.6.1.4.1.2021.4.5.0'
+SNMP[1]='baxic_server:memory_free:1.3.6.1.4.1.2021.4.6.0'
+
+SNMP[10]='baxic_thermometer:temperature:0.1.3.6.1.4.1.21287.16.1.0'
+
+
+# define the exporter as a systemd service if required
+cp baxic-snmp-expoter.service /etc/systemd/system
+systemctl daemon-reload
+systemctl enable baxic-snmp-exporter.service
+
+
+---- Running
+
+It's strongly recommended to run the script under non-privileged user.
+
+To start the service under the pre-configured nobody:nogroup user:group, run:
+
+systemctl start baxic-snmp-exporter.service
+
+Or if you want to run/test it just as a CLI command, run under the required user
+account:
+
+/opt/prometheus-apps/baxic-snmp-exporter/baxic-snmp-exporter.sh
+
+
+---- Test functionality
+
+The returned metrics can be checked from a web-browser or from a command-line,
+e.g. using curl:
+
+curl -i 'http://localhost:9089/mertrics?module=baxic_server&target=localhost'
+
+
+---- Summary
+
+The exporter is up and running now. You should consider protecting access
+to it on your firewall. You can now collect its metrics in a standard way
+using Prometheus.
